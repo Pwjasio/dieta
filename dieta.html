@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date & Time Manager</title>
+    <link rel="stylesheet" href="dieta.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Date & Time Manager</h1>
+            <p>Manage your important dates and add time intervals to them</p>
+            <div class="database-controls">
+                <button class="db-btn save-btn" onclick="saveToDatabase()">💾 Save All</button>
+                <button class="db-btn load-btn" onclick="loadFromDatabase()">📂 Load All</button>
+                <button class="db-btn export-btn" onclick="exportData()">📤 Export</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button class="db-btn import-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
+                <button class="db-btn clear-btn" onclick="clearDatabase()">🗑️ Clear DB</button>
+            </div>
+        </div>
+
+        <div class="dates-grid">
+            <div class="date-card">
+                <h3>Date 1</h3>
+                <div class="input-group">
+                    <label for="label1">Label:</label>
+                    <input type="text" id="label1" placeholder="Enter description..." onchange="autoSave()">
+                </div>
+                <div class="input-group">
+                    <label for="date1">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date1" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time1">Add Time (hours):</label>
+                    <input type="number" id="time1" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(1, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(1, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(1, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result1">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(1)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 2</h3>
+                <div class="input-group">
+                    <label for="label2">Label:</label>
+                    <input type="text" id="label2" placeholder="Enter description..." onchange="autoSave()">
+                </div>
+                <div class="input-group">
+                    <label for="date2">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date2" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time2">Add Time (hours):</label>
+                    <input type="number" id="time2" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(2, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(2, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(2, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result2">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(2)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 3</h3>
+                <div class="input-group">
+                    <label for="label3">Label:</label>
+                    <input type="text" id="label3" placeholder="Enter description..." onchange="autoSave()">
+                </div>
+                <div class="input-group">
+                    <label for="date3">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date3" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time3">Add Time (hours):</label>
+                    <input type="number" id="time3" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(3, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(3, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(3, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result3">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(3)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 4</h3>
+                <div class="input-group">
+                    <label for="label4">Label:</label>
+                    <input type="text" id="label4" placeholder="Enter description..." onchange="autoSave()">
+                </div>
+                <div class="input-group">
+                    <label for="date4">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date4" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time4">Add Time (hours):</label>
+                    <input type="number" id="time4" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(4, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(4, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(4, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result4">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(4)">Reset</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 Tip: Use the time input field to add custom hours, or use the quick buttons for common intervals</p>
+        </div>
+    </div>
+
+    <script>
+        // In-memory database
+        let database = {
+            entries: [],
+            lastSaved: null
+        };
+
+        // Auto-save functionality
+        function autoSave() {
+            saveToDatabase();
+        }
+
+        // Save current state to database
+        function saveToDatabase() {
+            database.entries = [];
+            database.lastSaved = new Date().toISOString();
+            
+            for (let i = 1; i <= 4; i++) {
+                const entry = {
+                    id: i,
+                    label: document.getElementById(`label${i}`).value,
+                    timestamp: document.getElementById(`date${i}`).value,
+                    timeToAdd: document.getElementById(`time${i}`).value
+                };
+                database.entries.push(entry);
+            }
+            
+            showNotification('Data saved successfully!', 'success');
+        }
+
+        // Load data from database
+        function loadFromDatabase() {
+            if (database.entries.length === 0) {
+                showNotification('No saved data found!', 'warning');
+                return;
+            }
+            
+            database.entries.forEach(entry => {
+                if (entry.id >= 1 && entry.id <= 4) {
+                    document.getElementById(`label${entry.id}`).value = entry.label || '';
+                    document.getElementById(`date${entry.id}`).value = entry.timestamp || '';
+                    document.getElementById(`time${entry.id}`).value = entry.timeToAdd || '0';
+                    updateResult(entry.id);
+                }
+            });
+            
+            showNotification('Data loaded successfully!', 'success');
+        }
+
+        // Export data as JSON file
+        function exportData() {
+            if (database.entries.length === 0) {
+                showNotification('No data to export!', 'warning');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(database, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        // Import data from JSON file
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.entries && Array.isArray(importedData.entries)) {
+                        database = importedData;
+                        loadFromDatabase();
+                        showNotification('Data imported successfully!', 'success');
+                    } else {
+                        showNotification('Invalid file format!', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error reading file!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the file input
+            event.target.value = '';
+        }
+
+        // Clear database
+        function clearDatabase() {
+            if (confirm('Are you sure you want to clear all saved data?')) {
+                database = { entries: [], lastSaved: null };
+                showNotification('Database cleared!', 'success');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            
+            // Set background color based on type
+            const colors = {
+                success: '#28a745',
+                warning: '#ffc107',
+                error: '#dc3545'
+            };
+            notification.style.backgroundColor = colors[type] || colors.success;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        // Set current timestamp in UTC+1 as default for all datetime inputs
+        const now = new Date();
+        const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+        const currentTimestamp = utcPlus1.toISOString().slice(0, 19);
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`date${i}`).value = currentTimestamp;
+        }
+
+        // Add event listeners to update results when date or time changes
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`date${i}`).addEventListener('change', () => {
+                updateResult(i);
+                autoSave();
+            });
+            document.getElementById(`time${i}`).addEventListener('input', () => {
+                updateResult(i);
+                autoSave();
+            });
+        }
+
+        function updateResult(dateNum) {
+            const dateInput = document.getElementById(`date${dateNum}`);
+            const timeInput = document.getElementById(`time${dateNum}`);
+            const resultSpan = document.getElementById(`result${dateNum}`);
+            
+            if (!dateInput.value) {
+                resultSpan.textContent = 'Select a timestamp first';
+                return;
+            }
+            
+            const baseDate = new Date(dateInput.value);
+            const hoursToAdd = parseFloat(timeInput.value) || 0;
+            
+            // Add the hours to the date
+            const resultDate = new Date(baseDate.getTime() + (hoursToAdd * 60 * 60 * 1000));
+            
+            // Format the result with seconds
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Europe/Berlin' // UTC+1
+            };
+            
+            resultSpan.textContent = resultDate.toLocaleDateString('en-US', options) + ' (UTC+1)';
+        }
+
+        function addTime(dateNum, hours) {
+            const timeInput = document.getElementById(`time${dateNum}`);
+            const currentTime = parseFloat(timeInput.value) || 0;
+            const newTime = Math.max(0, currentTime + hours);
+            timeInput.value = newTime;
+            updateResult(dateNum);
+            autoSave();
+        }
+
+        function resetDate(dateNum) {
+            const now = new Date();
+            const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+            const currentTimestamp = utcPlus1.toISOString().slice(0, 19);
+            document.getElementById(`date${dateNum}`).value = currentTimestamp;
+            document.getElementById(`time${dateNum}`).value = 0;
+            updateResult(dateNum);
+            autoSave();
+        }
+
+        // Initialize all results and try to load saved data
+        for (let i = 1; i <= 4; i++) {
+            updateResult(i);
+        }
+        
+        // Auto-save initial state
+        setTimeout(() => {
+            autoSave();
+        }, 1000);
+    </script>
+</body>
+</html>
