@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Date & Time Manager</title>
-    <link rel="stylesheet" href="dieta.css">
+    <title>Date & Time Manager - SQL Server</title>
+    <link rel="stylesheet" href="dieta.css">    
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📅 Date & Time Manager</h1>
-            <p>Manage your important dates and add time intervals to them</p>
+            <p>Manage your important dates with SQL Server integration</p>
+            <div class="status-indicator" id="connectionStatus">
+                🔌 Checking connection...
+            </div>
             <div class="database-controls">
                 <button class="db-btn save-btn" onclick="saveToDatabase()">💾 Save All</button>
                 <button class="db-btn load-btn" onclick="loadFromDatabase()">📂 Load All</button>
@@ -144,27 +147,48 @@
         </div>
 
         <div class="footer">
-            <p>💡 Tip: Use the time input field to add custom hours, or use the quick buttons for common intervals</p>
+            <p>💡 Tip: Data is automatically saved to SQL Server on every change</p>
         </div>
     </div>
 
     <script>
-        // In-memory database
-        let database = {
-            entries: [],
-            lastSaved: null
-        };
-
-        // Auto-save functionality
-        function autoSave() {
-            saveToDatabase();
+        // API base URL
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // Connection status
+        let isConnected = false;
+        
+        // Check database connection
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                isConnected = data.success;
+                updateConnectionStatus();
+            } catch (error) {
+                console.error('Connection check failed:', error);
+                isConnected = false;
+                updateConnectionStatus();
+            }
         }
-
-        // Save current state to database
-        function saveToDatabase() {
-            database.entries = [];
-            database.lastSaved = new Date().toISOString();
+        
+        // Update connection status indicator
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            if (isConnected) {
+                statusElement.textContent = '🟢 Connected to SQL Server';
+                statusElement.className = 'status-indicator status-connected';
+            } else {
+                statusElement.textContent = '🔴 Disconnected from SQL Server';
+                statusElement.className = 'status-indicator status-disconnected';
+            }
+        }
+        
+        // Auto-save functionality
+        async function autoSave() {
+            if (!isConnected) return;
             
+            const entries = [];
             for (let i = 1; i <= 4; i++) {
                 const entry = {
                     id: i,
@@ -172,70 +196,176 @@
                     timestamp: document.getElementById(`date${i}`).value,
                     timeToAdd: document.getElementById(`time${i}`).value
                 };
-                database.entries.push(entry);
+                entries.push(entry);
             }
             
-            showNotification('Data saved successfully!', 'success');
-        }
-
-        // Load data from database
-        function loadFromDatabase() {
-            if (database.entries.length === 0) {
-                showNotification('No saved data found!', 'warning');
-                return;
-            }
-            
-            database.entries.forEach(entry => {
-                if (entry.id >= 1 && entry.id <= 4) {
-                    document.getElementById(`label${entry.id}`).value = entry.label || '';
-                    document.getElementById(`date${entry.id}`).value = entry.timestamp || '';
-                    document.getElementById(`time${entry.id}`).value = entry.timeToAdd || '0';
-                    updateResult(entry.id);
+            try {
+                const response = await fetch(`${API_BASE}/entries/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ entries })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save');
                 }
-            });
-            
-            showNotification('Data loaded successfully!', 'success');
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+            }
         }
-
-        // Export data as JSON file
-        function exportData() {
-            if (database.entries.length === 0) {
-                showNotification('No data to export!', 'warning');
+        
+        // Save current state to database
+        async function saveToDatabase() {
+            if (!isConnected) {
+                showNotification('Not connected to SQL Server!', 'error');
                 return;
             }
             
-            const dataStr = JSON.stringify(database, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            const entries = [];
+            for (let i = 1; i <= 4; i++) {
+                const entry = {
+                    id: i,
+                    label: document.getElementById(`label${i}`).value,
+                    timestamp: document.getElementById(`date${i}`).value,
+                    timeToAdd: document.getElementById(`time${i}`).value
+                };
+                entries.push(entry);
+            }
             
-            showNotification('Data exported successfully!', 'success');
+            try {
+                const response = await fetch(`${API_BASE}/entries/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ entries })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Data saved to SQL Server successfully!', 'success');
+                } else {
+                    showNotification(data.error || 'Failed to save data', 'error');
+                }
+            } catch (error) {
+                console.error('Save failed:', error);
+                showNotification('Failed to save data to SQL Server', 'error');
+            }
         }
-
-        // Import data from JSON file
-        function importData(event) {
+        
+        // Load data from database
+        async function loadFromDatabase() {
+            if (!isConnected) {
+                showNotification('Not connected to SQL Server!', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/entries`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        showNotification('No saved data found in SQL Server!', 'warning');
+                        return;
+                    }
+                    
+                    data.data.forEach(entry => {
+                        if (entry.id >= 1 && entry.id <= 4) {
+                            document.getElementById(`label${entry.id}`).value = entry.label || '';
+                            document.getElementById(`date${entry.id}`).value = entry.timestamp ? 
+                                new Date(entry.timestamp).toISOString().slice(0, 19) : '';
+                            document.getElementById(`time${entry.id}`).value = entry.timeToAdd || '0';
+                            updateResult(entry.id);
+                        }
+                    });
+                    
+                    showNotification('Data loaded from SQL Server successfully!', 'success');
+                } else {
+                    showNotification(data.error || 'Failed to load data', 'error');
+                }
+            } catch (error) {
+                console.error('Load failed:', error);
+                showNotification('Failed to load data from SQL Server', 'error');
+            }
+        }
+        
+        // Export data from SQL Server
+        async function exportData() {
+            if (!isConnected) {
+                showNotification('Not connected to SQL Server!', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/export`);
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showNotification('Data exported from SQL Server successfully!', 'success');
+            } catch (error) {
+                console.error('Export failed:', error);
+                showNotification('Failed to export data from SQL Server', 'error');
+            }
+        }
+        
+        // Import data to SQL Server
+        async function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
             
+            if (!isConnected) {
+                showNotification('Not connected to SQL Server!', 'error');
+                return;
+            }
+            
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
+                    let entries = [];
+                    
+                    // Handle different import formats
                     if (importedData.entries && Array.isArray(importedData.entries)) {
-                        database = importedData;
-                        loadFromDatabase();
-                        showNotification('Data imported successfully!', 'success');
+                        entries = importedData.entries;
+                    } else if (Array.isArray(importedData)) {
+                        entries = importedData;
                     } else {
                         showNotification('Invalid file format!', 'error');
+                        return;
+                    }
+                    
+                    const response = await fetch(`${API_BASE}/import`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ entries })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        await loadFromDatabase();
+                        showNotification('Data imported to SQL Server successfully!', 'success');
+                    } else {
+                        showNotification(data.error || 'Failed to import data', 'error');
                     }
                 } catch (error) {
-                    showNotification('Error reading file!', 'error');
+                    console.error('Import failed:', error);
+                    showNotification('Error importing data to SQL Server', 'error');
                 }
             };
             reader.readAsText(file);
@@ -243,15 +373,38 @@
             // Clear the file input
             event.target.value = '';
         }
-
+        
         // Clear database
-        function clearDatabase() {
-            if (confirm('Are you sure you want to clear all saved data?')) {
-                database = { entries: [], lastSaved: null };
-                showNotification('Database cleared!', 'success');
+        async function clearDatabase() {
+            if (!isConnected) {
+                showNotification('Not connected to SQL Server!', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all data from SQL Server?')) {
+                try {
+                    const response = await fetch(`${API_BASE}/entries`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('SQL Server database cleared!', 'success');
+                        // Reset all inputs
+                        for (let i = 1; i <= 4; i++) {
+                            document.getElementById(`label${i}`).value = '';
+                            resetDate(i);
+                        }
+                    } else {
+                        showNotification(data.error || 'Failed to clear database', 'error');
+                    }
+                } catch (error) {
+                    console.error('Clear failed:', error);
+                    showNotification('Failed to clear SQL Server database', 'error');
+                }
             }
         }
-
+        
         // Show notification
         function showNotification(message, type) {
             const notification = document.createElement('div');
@@ -271,6 +424,8 @@
                 opacity: 0;
                 transform: translateX(100%);
                 transition: all 0.3s ease;
+                max-width: 300px;
+                word-wrap: break-word;
             `;
             
             // Set background color based on type
@@ -289,7 +444,7 @@
                 notification.style.transform = 'translateX(0)';
             }, 100);
             
-            // Remove after 3 seconds
+            // Remove after 4 seconds
             setTimeout(() => {
                 notification.style.opacity = '0';
                 notification.style.transform = 'translateX(100%)';
@@ -298,8 +453,9 @@
                         notification.parentNode.removeChild(notification);
                     }
                 }, 300);
-            }, 3000);
+            }, 4000);
         }
+        
         // Set current timestamp in UTC+1 as default for all datetime inputs
         const now = new Date();
         const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
@@ -312,11 +468,11 @@
         for (let i = 1; i <= 4; i++) {
             document.getElementById(`date${i}`).addEventListener('change', () => {
                 updateResult(i);
-                autoSave();
+                if (isConnected) autoSave();
             });
             document.getElementById(`time${i}`).addEventListener('input', () => {
                 updateResult(i);
-                autoSave();
+                if (isConnected) autoSave();
             });
         }
 
@@ -356,7 +512,7 @@
             const newTime = Math.max(0, currentTime + hours);
             timeInput.value = newTime;
             updateResult(dateNum);
-            autoSave();
+            if (isConnected) autoSave();
         }
 
         function resetDate(dateNum) {
@@ -366,18 +522,30 @@
             document.getElementById(`date${dateNum}`).value = currentTimestamp;
             document.getElementById(`time${dateNum}`).value = 0;
             updateResult(dateNum);
-            autoSave();
+            if (isConnected) autoSave();
         }
 
-        // Initialize all results and try to load saved data
-        for (let i = 1; i <= 4; i++) {
-            updateResult(i);
+        // Initialize application
+        async function initializeApp() {
+            // Check connection first
+            await checkConnection();
+            
+            // Initialize all results
+            for (let i = 1; i <= 4; i++) {
+                updateResult(i);
+            }
+            
+            // Load saved data if connected
+            if (isConnected) {
+                await loadFromDatabase();
+            }
+            
+            // Set up periodic connection check
+            setInterval(checkConnection, 30000); // Check every 30 seconds
         }
         
-        // Auto-save initial state
-        setTimeout(() => {
-            autoSave();
-        }, 1000);
+        // Start the application
+        initializeApp();
     </script>
 </body>
 </html>
