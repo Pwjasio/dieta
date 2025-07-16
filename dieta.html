@@ -3,24 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Date & Time Manager - SQL Server</title>
-    <link rel="stylesheet" href="dieta.css">    
+    <title>Date & Time Manager - Cloud Ready</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .status-connected {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-disconnected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .database-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .db-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            min-width: 90px;
+        }
+
+        .save-btn {
+            background: #28a745;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .load-btn {
+            background: #007bff;
+        }
+
+        .load-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .export-btn {
+            background: #17a2b8;
+        }
+
+        .export-btn:hover {
+            background: #117a8b;
+            transform: translateY(-2px);
+        }
+
+        .import-btn {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .import-btn:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background: #dc3545;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .dates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .date-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .date-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .date-card h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .time-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .subtract-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .subtract-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .current-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .current-display strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dates-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📅 Date & Time Manager</h1>
-            <p>Manage your important dates with SQL Server integration</p>
-            <div class="status-indicator" id="connectionStatus">
-                🔌 Checking connection...
+            <p>Manage your important dates with cloud-ready storage</p>
+            <div class="status-indicator status-connected" id="connectionStatus">
+                🟢 Ready to use
             </div>
             <div class="database-controls">
-                <button class="db-btn save-btn" onclick="saveToDatabase()">💾 Save All</button>
-                <button class="db-btn load-btn" onclick="loadFromDatabase()">📂 Load All</button>
                 <button class="db-btn export-btn" onclick="exportData()">📤 Export</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
                 <button class="db-btn import-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
-                <button class="db-btn clear-btn" onclick="clearDatabase()">🗑️ Clear DB</button>
+                <button class="db-btn clear-btn" onclick="clearAllData()">🗑️ Clear All</button>
             </div>
         </div>
 
@@ -29,7 +329,7 @@
                 <h3>Date 1</h3>
                 <div class="input-group">
                     <label for="label1">Label:</label>
-                    <input type="text" id="label1" placeholder="Enter description..." onchange="autoSave()">
+                    <input type="text" id="label1" placeholder="Enter description..." onchange="saveData()">
                 </div>
                 <div class="input-group">
                     <label for="date1">Current Timestamp (UTC+1):</label>
@@ -59,7 +359,7 @@
                 <h3>Date 2</h3>
                 <div class="input-group">
                     <label for="label2">Label:</label>
-                    <input type="text" id="label2" placeholder="Enter description..." onchange="autoSave()">
+                    <input type="text" id="label2" placeholder="Enter description..." onchange="saveData()">
                 </div>
                 <div class="input-group">
                     <label for="date2">Current Timestamp (UTC+1):</label>
@@ -89,7 +389,7 @@
                 <h3>Date 3</h3>
                 <div class="input-group">
                     <label for="label3">Label:</label>
-                    <input type="text" id="label3" placeholder="Enter description..." onchange="autoSave()">
+                    <input type="text" id="label3" placeholder="Enter description..." onchange="saveData()">
                 </div>
                 <div class="input-group">
                     <label for="date3">Current Timestamp (UTC+1):</label>
@@ -119,7 +419,7 @@
                 <h3>Date 4</h3>
                 <div class="input-group">
                     <label for="label4">Label:</label>
-                    <input type="text" id="label4" placeholder="Enter description..." onchange="autoSave()">
+                    <input type="text" id="label4" placeholder="Enter description..." onchange="saveData()">
                 </div>
                 <div class="input-group">
                     <label for="date4">Current Timestamp (UTC+1):</label>
@@ -147,225 +447,107 @@
         </div>
 
         <div class="footer">
-            <p>💡 Tip: Data is automatically saved to SQL Server on every change</p>
+            <p>💡 Tip: Data is automatically saved in your browser session</p>
         </div>
     </div>
 
     <script>
-        // API base URL
-        const API_BASE = 'http://localhost:3000/api';
-        
-        // Connection status
-        let isConnected = false;
-        
-        // Check database connection
-        async function checkConnection() {
-            try {
-                const response = await fetch(`${API_BASE}/health`);
-                const data = await response.json();
-                isConnected = data.success;
-                updateConnectionStatus();
-            } catch (error) {
-                console.error('Connection check failed:', error);
-                isConnected = false;
-                updateConnectionStatus();
-            }
-        }
-        
-        // Update connection status indicator
-        function updateConnectionStatus() {
-            const statusElement = document.getElementById('connectionStatus');
-            if (isConnected) {
-                statusElement.textContent = '🟢 Connected to SQL Server';
-                statusElement.className = 'status-indicator status-connected';
-            } else {
-                statusElement.textContent = '🔴 Disconnected from SQL Server';
-                statusElement.className = 'status-indicator status-disconnected';
-            }
-        }
-        
-        // Auto-save functionality
-        async function autoSave() {
-            if (!isConnected) return;
-            
-            const entries = [];
+        // In-memory storage for the current session
+        let appData = {
+            entries: []
+        };
+
+        // Initialize default data
+        function initializeData() {
             for (let i = 1; i <= 4; i++) {
-                const entry = {
+                appData.entries[i-1] = {
                     id: i,
-                    label: document.getElementById(`label${i}`).value,
-                    timestamp: document.getElementById(`date${i}`).value,
-                    timeToAdd: document.getElementById(`time${i}`).value
+                    label: '',
+                    timestamp: getCurrentTimestamp(),
+                    timeToAdd: '0'
                 };
-                entries.push(entry);
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/entries/save`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ entries })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to save');
-                }
-            } catch (error) {
-                console.error('Auto-save failed:', error);
             }
         }
-        
-        // Save current state to database
-        async function saveToDatabase() {
-            if (!isConnected) {
-                showNotification('Not connected to SQL Server!', 'error');
-                return;
-            }
-            
-            const entries = [];
+
+        // Get current timestamp in UTC+1
+        function getCurrentTimestamp() {
+            const now = new Date();
+            const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+            return utcPlus1.toISOString().slice(0, 19);
+        }
+
+        // Save current state to memory
+        function saveData() {
             for (let i = 1; i <= 4; i++) {
-                const entry = {
-                    id: i,
-                    label: document.getElementById(`label${i}`).value,
-                    timestamp: document.getElementById(`date${i}`).value,
-                    timeToAdd: document.getElementById(`time${i}`).value
-                };
-                entries.push(entry);
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/entries/save`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ entries })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    showNotification('Data saved to SQL Server successfully!', 'success');
-                } else {
-                    showNotification(data.error || 'Failed to save data', 'error');
-                }
-            } catch (error) {
-                console.error('Save failed:', error);
-                showNotification('Failed to save data to SQL Server', 'error');
+                const entry = appData.entries[i-1];
+                entry.label = document.getElementById(`label${i}`).value;
+                entry.timestamp = document.getElementById(`date${i}`).value;
+                entry.timeToAdd = document.getElementById(`time${i}`).value;
             }
         }
-        
-        // Load data from database
-        async function loadFromDatabase() {
-            if (!isConnected) {
-                showNotification('Not connected to SQL Server!', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/entries`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    if (data.data.length === 0) {
-                        showNotification('No saved data found in SQL Server!', 'warning');
-                        return;
-                    }
-                    
-                    data.data.forEach(entry => {
-                        if (entry.id >= 1 && entry.id <= 4) {
-                            document.getElementById(`label${entry.id}`).value = entry.label || '';
-                            document.getElementById(`date${entry.id}`).value = entry.timestamp ? 
-                                new Date(entry.timestamp).toISOString().slice(0, 19) : '';
-                            document.getElementById(`time${entry.id}`).value = entry.timeToAdd || '0';
-                            updateResult(entry.id);
-                        }
-                    });
-                    
-                    showNotification('Data loaded from SQL Server successfully!', 'success');
-                } else {
-                    showNotification(data.error || 'Failed to load data', 'error');
-                }
-            } catch (error) {
-                console.error('Load failed:', error);
-                showNotification('Failed to load data from SQL Server', 'error');
+
+        // Load data from memory to UI
+        function loadData() {
+            for (let i = 1; i <= 4; i++) {
+                const entry = appData.entries[i-1];
+                document.getElementById(`label${i}`).value = entry.label || '';
+                document.getElementById(`date${i}`).value = entry.timestamp || getCurrentTimestamp();
+                document.getElementById(`time${i}`).value = entry.timeToAdd || '0';
+                updateResult(i);
             }
         }
-        
-        // Export data from SQL Server
-        async function exportData() {
-            if (!isConnected) {
-                showNotification('Not connected to SQL Server!', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/export`);
-                if (!response.ok) {
-                    throw new Error('Export failed');
-                }
-                
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                showNotification('Data exported from SQL Server successfully!', 'success');
-            } catch (error) {
-                console.error('Export failed:', error);
-                showNotification('Failed to export data from SQL Server', 'error');
-            }
+
+        // Export data to JSON file
+        function exportData() {
+            saveData();
+            const dataStr = JSON.stringify(appData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showNotification('Data exported successfully!', 'success');
         }
-        
-        // Import data to SQL Server
-        async function importData(event) {
+
+        // Import data from JSON file
+        function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            if (!isConnected) {
-                showNotification('Not connected to SQL Server!', 'error');
-                return;
-            }
-            
+
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    let entries = [];
                     
                     // Handle different import formats
                     if (importedData.entries && Array.isArray(importedData.entries)) {
-                        entries = importedData.entries;
+                        appData.entries = importedData.entries;
                     } else if (Array.isArray(importedData)) {
-                        entries = importedData;
+                        appData.entries = importedData;
                     } else {
                         showNotification('Invalid file format!', 'error');
                         return;
                     }
-                    
-                    const response = await fetch(`${API_BASE}/import`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ entries })
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        await loadFromDatabase();
-                        showNotification('Data imported to SQL Server successfully!', 'success');
-                    } else {
-                        showNotification(data.error || 'Failed to import data', 'error');
+
+                    // Ensure we have 4 entries
+                    while (appData.entries.length < 4) {
+                        appData.entries.push({
+                            id: appData.entries.length + 1,
+                            label: '',
+                            timestamp: getCurrentTimestamp(),
+                            timeToAdd: '0'
+                        });
                     }
+
+                    loadData();
+                    showNotification('Data imported successfully!', 'success');
                 } catch (error) {
                     console.error('Import failed:', error);
-                    showNotification('Error importing data to SQL Server', 'error');
+                    showNotification('Error importing data!', 'error');
                 }
             };
             reader.readAsText(file);
@@ -373,81 +555,32 @@
             // Clear the file input
             event.target.value = '';
         }
-        
-        // Clear database
-        async function clearDatabase() {
-            if (!isConnected) {
-                showNotification('Not connected to SQL Server!', 'error');
-                return;
-            }
-            
-            if (confirm('Are you sure you want to clear all data from SQL Server?')) {
-                try {
-                    const response = await fetch(`${API_BASE}/entries`, {
-                        method: 'DELETE'
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        showNotification('SQL Server database cleared!', 'success');
-                        // Reset all inputs
-                        for (let i = 1; i <= 4; i++) {
-                            document.getElementById(`label${i}`).value = '';
-                            resetDate(i);
-                        }
-                    } else {
-                        showNotification(data.error || 'Failed to clear database', 'error');
-                    }
-                } catch (error) {
-                    console.error('Clear failed:', error);
-                    showNotification('Failed to clear SQL Server database', 'error');
-                }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                initializeData();
+                loadData();
+                showNotification('All data cleared!', 'success');
             }
         }
-        
+
         // Show notification
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
             
-            // Add styles
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                border-radius: 6px;
-                color: white;
-                font-weight: 500;
-                z-index: 1000;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-                max-width: 300px;
-                word-wrap: break-word;
-            `;
-            
-            // Set background color based on type
-            const colors = {
-                success: '#28a745',
-                warning: '#ffc107',
-                error: '#dc3545'
-            };
-            notification.style.backgroundColor = colors[type] || colors.success;
-            
             document.body.appendChild(notification);
             
             // Animate in
             setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(0)';
+                notification.classList.add('show');
             }, 100);
             
             // Remove after 4 seconds
             setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
+                notification.classList.remove('show');
                 setTimeout(() => {
                     if (notification.parentNode) {
                         notification.parentNode.removeChild(notification);
@@ -455,27 +588,8 @@
                 }, 300);
             }, 4000);
         }
-        
-        // Set current timestamp in UTC+1 as default for all datetime inputs
-        const now = new Date();
-        const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
-        const currentTimestamp = utcPlus1.toISOString().slice(0, 19);
-        for (let i = 1; i <= 4; i++) {
-            document.getElementById(`date${i}`).value = currentTimestamp;
-        }
 
-        // Add event listeners to update results when date or time changes
-        for (let i = 1; i <= 4; i++) {
-            document.getElementById(`date${i}`).addEventListener('change', () => {
-                updateResult(i);
-                if (isConnected) autoSave();
-            });
-            document.getElementById(`time${i}`).addEventListener('input', () => {
-                updateResult(i);
-                if (isConnected) autoSave();
-            });
-        }
-
+        // Update result display
         function updateResult(dateNum) {
             const dateInput = document.getElementById(`date${dateNum}`);
             const timeInput = document.getElementById(`time${dateNum}`);
@@ -506,46 +620,50 @@
             resultSpan.textContent = resultDate.toLocaleDateString('en-US', options) + ' (UTC+1)';
         }
 
+        // Add time to a specific date
         function addTime(dateNum, hours) {
             const timeInput = document.getElementById(`time${dateNum}`);
             const currentTime = parseFloat(timeInput.value) || 0;
             const newTime = Math.max(0, currentTime + hours);
             timeInput.value = newTime;
             updateResult(dateNum);
-            if (isConnected) autoSave();
+            saveData();
         }
 
+        // Reset a specific date
         function resetDate(dateNum) {
-            const now = new Date();
-            const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
-            const currentTimestamp = utcPlus1.toISOString().slice(0, 19);
+            const currentTimestamp = getCurrentTimestamp();
             document.getElementById(`date${dateNum}`).value = currentTimestamp;
             document.getElementById(`time${dateNum}`).value = 0;
             updateResult(dateNum);
-            if (isConnected) autoSave();
+            saveData();
         }
 
-        // Initialize application
-        async function initializeApp() {
-            // Check connection first
-            await checkConnection();
+        // Initialize the application
+        function initializeApp() {
+            // Initialize data structure
+            initializeData();
             
-            // Initialize all results
+            // Set up event listeners
             for (let i = 1; i <= 4; i++) {
-                updateResult(i);
+                document.getElementById(`date${i}`).addEventListener('change', () => {
+                    updateResult(i);
+                    saveData();
+                });
+                document.getElementById(`time${i}`).addEventListener('input', () => {
+                    updateResult(i);
+                    saveData();
+                });
             }
             
-            // Load saved data if connected
-            if (isConnected) {
-                await loadFromDatabase();
-            }
+            // Load initial data
+            loadData();
             
-            // Set up periodic connection check
-            setInterval(checkConnection, 30000); // Check every 30 seconds
+            showNotification('Application ready!', 'success');
         }
-        
-        // Start the application
-        initializeApp();
+
+        // Start the application when page loads
+        window.addEventListener('load', initializeApp);
     </script>
 </body>
 </html>
