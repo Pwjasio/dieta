@@ -1,0 +1,682 @@
+const express = require("express");
+const app = express();
+const port = process.env.PORT || 3001;
+
+app.get("/", (req, res) => res.type('html').send(html));
+
+const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+server.keepAliveTimeout = 120 * 1000;
+server.headersTimeout = 120 * 1000;
+
+const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date & Time Manager - Cloud Ready</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .status-connected {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-disconnected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .database-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .db-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            min-width: 90px;
+        }
+
+        .save-btn {
+            background: #28a745;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .load-btn {
+            background: #007bff;
+        }
+
+        .load-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .export-btn {
+            background: #17a2b8;
+        }
+
+        .export-btn:hover {
+            background: #117a8b;
+            transform: translateY(-2px);
+        }
+
+        .import-btn {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .import-btn:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background: #dc3545;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .dates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .date-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .date-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .date-card h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .time-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .subtract-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .subtract-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .current-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .current-display strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dates-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Date & Time Manager</h1>
+            <p>Manage your important dates with cloud-ready storage</p>
+            <div class="status-indicator status-connected" id="connectionStatus">
+                🟢 Ready to use
+            </div>
+            <div class="database-controls">
+                <button class="db-btn export-btn" onclick="exportData()">📤 Export</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button class="db-btn import-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
+                <button class="db-btn clear-btn" onclick="clearAllData()">🗑️ Clear All</button>
+            </div>
+        </div>
+
+        <div class="dates-grid">
+            <div class="date-card">
+                <h3>Date 1</h3>
+                <div class="input-group">
+                    <label for="label1">Label:</label>
+                    <input type="text" id="label1" placeholder="Enter description..." onchange="saveData()">
+                </div>
+                <div class="input-group">
+                    <label for="date1">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date1" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time1">Add Time (hours):</label>
+                    <input type="number" id="time1" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(1, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(1, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(1, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(1, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result1">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(1)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 2</h3>
+                <div class="input-group">
+                    <label for="label2">Label:</label>
+                    <input type="text" id="label2" placeholder="Enter description..." onchange="saveData()">
+                </div>
+                <div class="input-group">
+                    <label for="date2">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date2" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time2">Add Time (hours):</label>
+                    <input type="number" id="time2" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(2, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(2, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(2, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(2, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result2">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(2)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 3</h3>
+                <div class="input-group">
+                    <label for="label3">Label:</label>
+                    <input type="text" id="label3" placeholder="Enter description..." onchange="saveData()">
+                </div>
+                <div class="input-group">
+                    <label for="date3">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date3" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time3">Add Time (hours):</label>
+                    <input type="number" id="time3" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(3, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(3, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(3, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(3, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result3">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(3)">Reset</button>
+            </div>
+
+            <div class="date-card">
+                <h3>Date 4</h3>
+                <div class="input-group">
+                    <label for="label4">Label:</label>
+                    <input type="text" id="label4" placeholder="Enter description..." onchange="saveData()">
+                </div>
+                <div class="input-group">
+                    <label for="date4">Current Timestamp (UTC+1):</label>
+                    <input type="datetime-local" id="date4" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="time4">Add Time (hours):</label>
+                    <input type="number" id="time4" value="0" min="0" step="0.5">
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn add-btn" onclick="addTime(4, 1)">+1 Hour</button>
+                    <button class="time-btn add-btn" onclick="addTime(4, 0.5)">+30 Min</button>
+                    <button class="time-btn add-btn" onclick="addTime(4, 24)">+1 Day</button>
+                </div>
+                <div class="time-controls">
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -1)">-1 Hour</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -0.5)">-30 Min</button>
+                    <button class="time-btn subtract-btn" onclick="addTime(4, -24)">-1 Day</button>
+                </div>
+                <div class="current-display">
+                    <strong>Result:</strong> <span id="result4">Select a timestamp first</span>
+                </div>
+                <button class="reset-btn" onclick="resetDate(4)">Reset</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 Tip: Data is automatically saved in your browser session</p>
+        </div>
+    </div>
+
+    <script>
+        // In-memory storage for the current session
+        let appData = {
+            entries: []
+        };
+
+        // Initialize default data
+        function initializeData() {
+            for (let i = 1; i <= 4; i++) {
+                appData.entries[i-1] = {
+                    id: i,
+                    label: '',
+                    timestamp: getCurrentTimestamp(),
+                    timeToAdd: '0'
+                };
+            }
+        }
+
+        // Get current timestamp in UTC+1
+        function getCurrentTimestamp() {
+            const now = new Date();
+            const utcPlus1 = new Date(now.getTime() + (1 * 60 * 60 * 1000));
+            return utcPlus1.toISOString().slice(0, 19);
+        }
+
+        // Save current state to memory
+        function saveData() {
+            for (let i = 1; i <= 4; i++) {
+                const entry = appData.entries[i-1];
+                entry.label = document.getElementById(`label${i}`).value;
+                entry.timestamp = document.getElementById(`date${i}`).value;
+                entry.timeToAdd = document.getElementById(`time${i}`).value;
+            }
+        }
+
+        // Load data from memory to UI
+        function loadData() {
+            for (let i = 1; i <= 4; i++) {
+                const entry = appData.entries[i-1];
+                document.getElementById(`label${i}`).value = entry.label || '';
+                document.getElementById(`date${i}`).value = entry.timestamp || getCurrentTimestamp();
+                document.getElementById(`time${i}`).value = entry.timeToAdd || '0';
+                updateResult(i);
+            }
+        }
+
+        // Export data to JSON file
+        function exportData() {
+            saveData();
+            const dataStr = JSON.stringify(appData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `timestamp_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        // Import data from JSON file
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Handle different import formats
+                    if (importedData.entries && Array.isArray(importedData.entries)) {
+                        appData.entries = importedData.entries;
+                    } else if (Array.isArray(importedData)) {
+                        appData.entries = importedData;
+                    } else {
+                        showNotification('Invalid file format!', 'error');
+                        return;
+                    }
+
+                    // Ensure we have 4 entries
+                    while (appData.entries.length < 4) {
+                        appData.entries.push({
+                            id: appData.entries.length + 1,
+                            label: '',
+                            timestamp: getCurrentTimestamp(),
+                            timeToAdd: '0'
+                        });
+                    }
+
+                    loadData();
+                    showNotification('Data imported successfully!', 'success');
+                } catch (error) {
+                    console.error('Import failed:', error);
+                    showNotification('Error importing data!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the file input
+            event.target.value = '';
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                initializeData();
+                loadData();
+                showNotification('All data cleared!', 'success');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Update result display
+        function updateResult(dateNum) {
+            const dateInput = document.getElementById(`date${dateNum}`);
+            const timeInput = document.getElementById(`time${dateNum}`);
+            const resultSpan = document.getElementById(`result${dateNum}`);
+            
+            if (!dateInput.value) {
+                resultSpan.textContent = 'Select a timestamp first';
+                return;
+            }
+            
+            const baseDate = new Date(dateInput.value);
+            const hoursToAdd = parseFloat(timeInput.value) || 0;
+            
+            // Add the hours to the date
+            const resultDate = new Date(baseDate.getTime() + (hoursToAdd * 60 * 60 * 1000));
+            
+            // Format the result with seconds
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Europe/Berlin' // UTC+1
+            };
+            
+            resultSpan.textContent = resultDate.toLocaleDateString('en-US', options) + ' (UTC+1)';
+        }
+
+        // Add time to a specific date
+        function addTime(dateNum, hours) {
+            const timeInput = document.getElementById(`time${dateNum}`);
+            const currentTime = parseFloat(timeInput.value) || 0;
+            const newTime = Math.max(0, currentTime + hours);
+            timeInput.value = newTime;
+            updateResult(dateNum);
+            saveData();
+        }
+
+        // Reset a specific date
+        function resetDate(dateNum) {
+            const currentTimestamp = getCurrentTimestamp();
+            document.getElementById(`date${dateNum}`).value = currentTimestamp;
+            document.getElementById(`time${dateNum}`).value = 0;
+            updateResult(dateNum);
+            saveData();
+        }
+
+        // Initialize the application
+        function initializeApp() {
+            // Initialize data structure
+            initializeData();
+            
+            // Set up event listeners
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`date${i}`).addEventListener('change', () => {
+                    updateResult(i);
+                    saveData();
+                });
+                document.getElementById(`time${i}`).addEventListener('input', () => {
+                    updateResult(i);
+                    saveData();
+                });
+            }
+            
+            // Load initial data
+            loadData();
+            
+            showNotification('Application ready!', 'success');
+        }
+
+        // Start the application when page loads
+        window.addEventListener('load', initializeApp);
+    </script>
+</body>
+</html>
+`
